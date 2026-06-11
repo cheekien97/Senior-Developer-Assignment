@@ -1,0 +1,137 @@
+@model TrendAnalysisViewModel
+@{
+    ViewData["Title"] = "Trend Analysis";
+
+    string DirectionBadge(string direction) => direction switch
+    {
+        "Increasing" => "text-bg-danger",
+        "Decreasing" => "text-bg-success",
+        _ => "text-bg-secondary",
+    };
+}
+
+<div class="mb-4">
+    <h1 class="h3 mb-0">Trend Analysis</h1>
+    <p class="text-muted mb-0">Track how a metric evolves over a chosen period</p>
+</div>
+
+<form asp-controller="Trends" asp-action="Index" method="get" class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-3">
+                <label asp-for="Metric" class="form-label"></label>
+                <select asp-for="Metric" asp-items="@Model.Metrics" class="form-select"></select>
+            </div>
+            <div class="col-6 col-md-2">
+                <label asp-for="From" class="form-label"></label>
+                <input asp-for="From" type="date" class="form-control" />
+            </div>
+            <div class="col-6 col-md-2">
+                <label asp-for="To" class="form-label"></label>
+                <input asp-for="To" type="date" class="form-control" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label asp-for="State" class="form-label"></label>
+                <select asp-for="State" asp-items="@Model.States" class="form-select"></select>
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-graph-up"></i> Analyse
+                </button>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-info" role="alert">@Model.Message</div>
+}
+
+@if (Model.Searched && Model.Trend is not null && Model.Trend.Points.Count > 0)
+{
+    var t = Model.Trend;
+    <div class="row g-3 mb-4">
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase text-muted">Start Value</h6>
+                    <p class="h4 mb-0">@t.StartValue.ToString("N0")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase text-muted">End Value</h6>
+                    <p class="h4 mb-0">@t.EndValue.ToString("N0")</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase text-muted">Change</h6>
+                    <p class="h4 mb-0">@t.ChangeValue.ToString("N0") (@t.ChangePercentage.ToString("N1")%)</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 col-lg-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="text-uppercase text-muted">Direction</h6>
+                    <span class="badge @DirectionBadge(t.Direction) fs-6">@t.Direction</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white fw-semibold">
+            @t.Metric &mdash; @(string.IsNullOrEmpty(t.StateName) ? "National" : t.StateName)
+            <span class="text-muted fw-normal">(@t.PeriodStart.ToString("dd MMM yyyy") – @t.PeriodEnd.ToString("dd MMM yyyy"))</span>
+        </div>
+        <div class="card-body">
+            <canvas id="trendChart" height="110"></canvas>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (Model.Searched && Model.Trend is not null && Model.Trend.Points.Count > 0)
+    {
+        var labels = System.Text.Json.JsonSerializer.Serialize(
+            Model.Trend.Points.Select(p => p.Date.ToString("dd MMM")));
+        var values = System.Text.Json.JsonSerializer.Serialize(
+            Model.Trend.Points.Select(p => p.Value));
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+        <script>
+            (function () {
+                const ctx = document.getElementById('trendChart');
+                if (!ctx) return;
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: @Html.Raw(labels),
+                        datasets: [{
+                            label: '@Html.Raw(Model.Trend.Metric)',
+                            data: @Html.Raw(values),
+                            fill: true,
+                            tension: 0.3,
+                            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            pointRadius: 2,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        interaction: { mode: 'index', intersect: false },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            })();
+        </script>
+    }
+}

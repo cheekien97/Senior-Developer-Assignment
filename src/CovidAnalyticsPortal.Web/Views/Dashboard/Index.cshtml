@@ -1,0 +1,162 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2">
+    <div>
+        <h1 class="h3 mb-0">National Dashboard</h1>
+        <p class="text-muted mb-0">COVID-19 summary for Malaysia</p>
+    </div>
+    @if (Model.HasData)
+    {
+        <span class="badge bg-secondary fs-6 align-self-center">As of @Model.Summary!.AsOfDate.ToString("dd MMM yyyy")</span>
+    }
+</div>
+
+<form asp-controller="Dashboard" asp-action="Index" method="get" class="card shadow-sm mb-4">
+    <div class="card-body">
+        <div class="row g-3 align-items-end">
+            <div class="col-12 col-md-4">
+                <label asp-for="From" class="form-label"></label>
+                <input asp-for="From" type="date" class="form-control" />
+            </div>
+            <div class="col-12 col-md-4">
+                <label asp-for="To" class="form-label"></label>
+                <input asp-for="To" type="date" class="form-control" />
+            </div>
+            <div class="col-12 col-md-4 d-grid d-md-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel"></i> Apply Filter
+                </button>
+                <a asp-controller="Dashboard" asp-action="Index" class="btn btn-outline-secondary">Reset</a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert alert-warning" role="alert">@Model.Message</div>
+}
+
+@if (Model.HasData)
+{
+    var s = Model.Summary!;
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card text-bg-primary shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-uppercase opacity-75">Total Cases</h6>
+                    <p class="display-6 fw-bold mb-0">@s.TotalCases.ToString("N0")</p>
+                    <small class="opacity-75">+@s.NewCasesToday.ToString("N0") new today</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card text-bg-danger shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-uppercase opacity-75">Total Deaths</h6>
+                    <p class="display-6 fw-bold mb-0">@s.TotalDeaths.ToString("N0")</p>
+                    <small class="opacity-75">+@s.NewDeathsToday.ToString("N0") new today</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card text-bg-warning shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-uppercase opacity-75">Active Cases</h6>
+                    <p class="display-6 fw-bold mb-0">@s.ActiveCases.ToString("N0")</p>
+                    <small class="opacity-75">Currently infectious</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-sm-6 col-xl-3">
+            <div class="card text-bg-success shadow-sm h-100">
+                <div class="card-body">
+                    <h6 class="card-subtitle text-uppercase opacity-75">Recovered</h6>
+                    <p class="display-6 fw-bold mb-0">@s.TotalRecovered.ToString("N0")</p>
+                    <small class="opacity-75">Over the period</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-xl-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold">Cases by State</div>
+                <div class="card-body">
+                    <canvas id="stateCasesChart" height="140"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-12 col-xl-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white fw-semibold">State Breakdown</div>
+                <div class="table-responsive" style="max-height: 420px;">
+                    <table class="table table-striped table-hover mb-0">
+                        <thead class="table-light sticky-top">
+                            <tr>
+                                <th scope="col">State</th>
+                                <th scope="col" class="text-end">New Cases</th>
+                                <th scope="col" class="text-end">Active</th>
+                                <th scope="col" class="text-end">Deaths</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in s.StateBreakdown.OrderByDescending(r => r.NewCases))
+                            {
+                                <tr>
+                                    <td>@row.StateName</td>
+                                    <td class="text-end">@row.NewCases.ToString("N0")</td>
+                                    <td class="text-end">@row.ActiveCases.ToString("N0")</td>
+                                    <td class="text-end">@row.NewDeaths.ToString("N0")</td>
+                                </tr>
+                            }
+                            @if (s.StateBreakdown.Count == 0)
+                            {
+                                <tr><td colspan="4" class="text-center text-muted py-3">No state data available.</td></tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @if (Model.HasData && Model.Summary!.StateBreakdown.Count > 0)
+    {
+        var ordered = Model.Summary!.StateBreakdown.OrderByDescending(r => r.NewCases).ToList();
+        var labels = System.Text.Json.JsonSerializer.Serialize(ordered.Select(r => r.StateName));
+        var values = System.Text.Json.JsonSerializer.Serialize(ordered.Select(r => r.NewCases));
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+        <script>
+            (function () {
+                const ctx = document.getElementById('stateCasesChart');
+                if (!ctx) return;
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: @Html.Raw(labels),
+                        datasets: [{
+                            label: 'New Cases',
+                            data: @Html.Raw(values),
+                            backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                            borderColor: 'rgba(13, 110, 253, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: { legend: { display: false } },
+                        scales: { y: { beginAtZero: true } }
+                    }
+                });
+            })();
+        </script>
+    }
+}

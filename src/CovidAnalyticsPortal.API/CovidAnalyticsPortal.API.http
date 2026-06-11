@@ -1,0 +1,6 @@
+@CovidAnalyticsPortal.API_HostAddress = http://localhost:5114
+
+GET {{CovidAnalyticsPortal.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
