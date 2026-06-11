@@ -41,18 +41,19 @@ public sealed class StatisticsController : Controller
         CancellationToken cancellationToken)
     {
         var today = DateOnly.FromDateTime(DateTime.UtcNow);
+
+        // Default the filter to the latest available data month rather than
+        // "today", since the upstream feed may lag well behind the current date.
+        var (defaultFrom, defaultTo) = await ResolveDefaultRangeAsync(from, to, today, cancellationToken)
+            .ConfigureAwait(false);
+
         var model = new StateStatisticsViewModel
         {
-            From = from ?? today.AddDays(-30),
-            To = to ?? today,
+            From = from ?? defaultFrom,
+            To = to ?? defaultTo,
             State = state,
             States = ReferenceData.BuildStateItems(state),
         };
-
-        if (from is null && to is null)
-        {
-            return View(model);
-        }
 
         try
         {
@@ -73,5 +74,36 @@ public sealed class StatisticsController : Controller
         }
 
         return View(model);
+    }
+
+    private async Task<(DateOnly From, DateOnly To)> ResolveDefaultRangeAsync(
+        DateOnly? from,
+        DateOnly? to,
+        DateOnly today,
+        CancellationToken cancellationToken)
+    {
+        // A complete range was supplied; no probe needed.
+        if (from is not null && to is not null)
+        {
+            return (from.Value, to.Value);
+        }
+
+        try
+        {
+            var latest = await _apiClient
+                .GetLatestDataDateAsync(cancellationToken)
+                .ConfigureAwait(false);
+
+            if (latest is { } d)
+            {
+                return (new DateOnly(d.Year, d.Month, 1), d);
+            }
+        }
+        catch (HttpRequestException ex)
+        {
+            _logger.LogWarning(ex, "Failed to resolve the latest data date; using a recent window.");
+        }
+
+        return (today.AddDays(-30), today);
     }
 }

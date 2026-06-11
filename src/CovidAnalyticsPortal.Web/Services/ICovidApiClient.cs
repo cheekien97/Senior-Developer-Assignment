@@ -22,6 +22,15 @@ public interface ICovidApiClient
         CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Determines the most recent date for which data is available, so callers
+    /// can default their filters to the latest data period rather than "today"
+    /// (the upstream feed may lag well behind the current date).
+    /// </summary>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The latest available data date, or <c>null</c> if none is available.</returns>
+    Task<DateOnly?> GetLatestDataDateAsync(CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Retrieves per-state statistics for the supplied period and optional state.
     /// </summary>
     /// <param name="from">Inclusive start date.</param>

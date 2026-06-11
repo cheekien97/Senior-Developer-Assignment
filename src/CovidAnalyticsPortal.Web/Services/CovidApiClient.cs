@@ -16,6 +16,10 @@ public sealed class CovidApiClient : ICovidApiClient
 {
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web);
 
+    // COVID-19 reporting cannot predate the pandemic, so this is a safe lower
+    // bound for the "discover the latest available data date" probe call.
+    private static readonly DateOnly EarliestPossibleDate = new(2020, 1, 1);
+
     private readonly HttpClient _httpClient;
     private readonly ILogger<CovidApiClient> _logger;
     private readonly string _apiVersion;
@@ -48,6 +52,18 @@ public sealed class CovidApiClient : ICovidApiClient
 
         var uri = $"api/v{_apiVersion}/dashboard{query}";
         return await GetJsonAsync<DashboardResponse>(uri, cancellationToken).ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<DateOnly?> GetLatestDataDateAsync(CancellationToken cancellationToken = default)
+    {
+        // Probe the dashboard over a wide window; the API reports the most recent
+        // record date within the range as AsOfDate.
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var summary = await GetDashboardAsync(EarliestPossibleDate, today, cancellationToken)
+            .ConfigureAwait(false);
+
+        return summary?.AsOfDate;
     }
 
     /// <inheritdoc />

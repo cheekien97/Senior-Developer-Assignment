@@ -38,10 +38,41 @@ public sealed class DashboardController : Controller
         DateOnly? to,
         CancellationToken cancellationToken)
     {
+        // The API rejects end dates in the future, so clamp any future date to
+        // today to avoid surfacing a confusing "service unavailable" message.
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        if (from > today)
+        {
+            from = today;
+        }
+
+        if (to > today)
+        {
+            to = today;
+        }
+
         var model = new DashboardViewModel { From = from, To = to };
 
         try
         {
+            // No filter supplied: default the range to the latest available data
+            // month (first day of that month .. the latest data date), since the
+            // upstream feed may lag well behind "today".
+            if (from is null && to is null)
+            {
+                var latest = await _apiClient
+                    .GetLatestDataDateAsync(cancellationToken)
+                    .ConfigureAwait(false);
+
+                if (latest is { } asOf)
+                {
+                    from = new DateOnly(asOf.Year, asOf.Month, 1);
+                    to = asOf;
+                    model.From = from;
+                    model.To = to;
+                }
+            }
+
             model.Summary = await _apiClient
                 .GetDashboardAsync(from, to, cancellationToken)
                 .ConfigureAwait(false);
