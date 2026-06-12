@@ -6,7 +6,8 @@
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4)](https://dotnet.microsoft.com/)
 [![Architecture](https://img.shields.io/badge/Architecture-Clean-1f6feb)](#6-architecture-overview)
-[![Tests](https://img.shields.io/badge/Tests-44%20passing-2ea043)](#12-running-tests)
+[![Tests](https://img.shields.io/badge/Tests-85%20passing-2ea043)](#12-running-tests)
+[![Coverage](https://img.shields.io/badge/Coverage-88%25-2ea043)](#12-running-tests)
 
 ---
 
@@ -204,13 +205,15 @@ See [ADR-004](docs/adr/ADR-004-Logging-and-Observability.md) and [`docs/Architec
 
 ## 9. Testing Strategy
 
-The suite contains **44 tests** across two projects (**30 unit + 14 integration**), all passing.
+The suite contains **85 tests** across two projects (**71 unit + 14 integration**), all passing, with **~88% line coverage** (excluding auto-generated EF migrations).
 
 | Suite | Targets | Approach |
 |-------|---------|----------|
 | **Unit — Services** | `DashboardService`, `AnalyticsService` | Moq-mocked `IUnitOfWork` / `IRepository`; deterministic clock |
 | **Unit — Repositories** | `EfRepository<T>`, `UnitOfWork` | Real **in-memory SQLite** so EF configurations, converters and owned types are exercised |
-| **Unit — Validators** | `GetDashboardQuery`, `GetStateStatisticsQuery`, `GetTrendAnalysisQuery` validators | `FluentValidation.TestHelper` |
+| **Unit — Infrastructure** | `CovidDataImporter`, `MohDataProvider`, `AuditService`, `SystemDateTimeProvider` | Stubbed `HttpMessageHandler` / mocked provider; idempotent-upsert and cache assertions |
+| **Unit — Application** | Query handlers, `LoggingBehaviour`, `ValidationBehaviour` | Mocked services; MediatR pipeline behaviour tests |
+| **Unit — Validators** | `GetDashboardQuery`, `GetStateStatisticsQuery`, `GetTrendAnalysisQuery`, `GetAuditTrailQuery` validators | `FluentValidation.TestHelper` |
 | **Integration — API** | Dashboard, Analytics, and data-sync ingestion | `WebApplicationFactory<Program>` over the full HTTP pipeline with seeded in-memory SQLite |
 
 Principles: Arrange-Act-Assert, deterministic time via an injected `IDateTimeProvider`, no real network calls (the integration factory disables outbound sync and seeds its own data), and `Method_Scenario_ExpectedResult` naming.
@@ -324,10 +327,11 @@ Generate a human-readable coverage report:
 dotnet tool install --global dotnet-reportgenerator-globaltool
 reportgenerator -reports:"tests/**/coverage.cobertura.xml" \
   -targetdir:"tests/CoverageReport" -reporttypes:"Html;TextSummary" \
+  -classfilters:"-*.Migrations.*" \
   -assemblyfilters:"+CovidAnalyticsPortal.*;-CovidAnalyticsPortal.Tests.*"
 ```
 
-Expected result: **44 passing** (30 unit + 14 integration), 0 failed.
+Expected result: **85 passing** (71 unit + 14 integration), 0 failed, **~88% line coverage**.
 
 ---
 

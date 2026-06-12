@@ -37,6 +37,7 @@ TestResults/
 coverage*.json
 coverage*.xml
 coverage*.info
+CoverageReport/
 
 # NuGet
 *.nupkg
