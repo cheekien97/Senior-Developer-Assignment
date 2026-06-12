@@ -5,9 +5,9 @@
 
     string DirectionBadge(string direction) => direction switch
     {
-        "Increasing" => "text-bg-danger",
-        "Decreasing" => "text-bg-success",
-        _ => "text-bg-secondary",
+        "Increasing" => "bg-danger text-white",
+        "Decreasing" => "bg-success text-white",
+        _ => "bg-secondary text-white",
     };
 }
 
