@@ -6,31 +6,31 @@ How COVID-19 data moves from the upstream Ministry of Health feed into the local
 
 ```mermaid
 sequenceDiagram
-    participant Host as API start-up (Program.cs)
+    participant Host as API start-up
     participant DB as Database
-    participant T as CovidDataSyncBackgroundService
+    participant T as SyncBackgroundService
     participant I as CovidDataImporter
-    participant P as MohDataProvider (resilient typed HttpClient)
+    participant P as MohDataProvider
     participant Cache as IMemoryCache
-    participant MoH as MoH datasets (CSV)
+    participant MoH as MoH datasets
     participant UoW as IUnitOfWork
     participant L as Serilog
 
-    Host->>DB: MigrateDatabaseAsync() — apply EF migrations
-    Note over T: after InitialDelaySeconds, then every IntervalHours (if Enabled)
-    T->>I: ImportAsync()
-    I->>P: GetNationalDailyAsync() / GetStateDailyAsync()
+    Host->>DB: MigrateDatabaseAsync apply EF migrations
+    Note over T: after InitialDelaySeconds, then every IntervalHours
+    T->>I: ImportAsync
+    I->>P: GetNationalDailyAsync and GetStateDailyAsync
     P->>Cache: check cache
     alt cache miss
-        P->>MoH: GET cases/deaths CSV (retry · timeout · circuit breaker)
+        P->>MoH: GET cases and deaths CSV with retry, timeout, circuit breaker
         MoH-->>P: CSV snapshot
         P->>Cache: store normalised records
     end
-    P-->>I: IReadOnlyList<MohDailyRecord>
-    I->>UoW: upsert CovidStatistic / StateStatistic (idempotent)
-    UoW->>DB: SaveChangesAsync (atomic)
+    P-->>I: list of MohDailyRecord
+    I->>UoW: upsert CovidStatistic and StateStatistic, idempotent
+    UoW->>DB: SaveChangesAsync, atomic
     I->>L: log import outcome
-    Note over T,L: a failed run is caught & logged; retried next interval
+    Note over T,L: a failed run is caught and logged, retried next interval
 ```
 
 ## Querying (read path)
