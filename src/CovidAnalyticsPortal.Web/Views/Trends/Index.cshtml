@@ -23,13 +23,15 @@
                 <label asp-for="Metric" class="form-label"></label>
                 <select asp-for="Metric" asp-items="@Model.Metrics" class="form-select"></select>
             </div>
-            <div class="col-6 col-md-2">
-                <label asp-for="From" class="form-label"></label>
-                <input asp-for="From" type="date" class="form-control" max="@maxDate" />
-            </div>
-            <div class="col-6 col-md-2">
-                <label asp-for="To" class="form-label"></label>
-                <input asp-for="To" type="date" class="form-control" max="@maxDate" />
+            <div class="col-12 col-md-4">
+                <label for="dateRange" class="form-label">Date range</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar-range"></i></span>
+                    <input type="text" id="dateRange" class="form-control" placeholder="Select a date range"
+                           autocomplete="off" aria-label="Date range" data-date-range data-max="@maxDate" />
+                </div>
+                <input asp-for="From" type="hidden" value="@Model.From.ToString("yyyy-MM-dd")" />
+                <input asp-for="To" type="hidden" value="@Model.To.ToString("yyyy-MM-dd")" />
             </div>
             <div class="col-12 col-md-3">
                 <label asp-for="State" class="form-label"></label>

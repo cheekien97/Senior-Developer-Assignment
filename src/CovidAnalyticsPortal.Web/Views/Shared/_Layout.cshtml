@@ -9,15 +9,21 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/CovidAnalyticsPortal.Web.styles.css" asp-append-version="true" />
 </head>
 <body>
     @{
         var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+
+        Func<string, string> navClass = controller =>
+            string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) ? "nav-link active" : "nav-link";
+        Func<string, string?> navCurrent = controller =>
+            string.Equals(currentController, controller, StringComparison.OrdinalIgnoreCase) ? "page" : null;
     }
     <header>
-        <nav class="navbar app-nav navbar-expand-md sticky-top mb-4">
+        <nav class="navbar app-nav navbar-expand-md fixed-top">
             <div class="container">
                 <a class="navbar-brand" asp-area="" asp-controller="Dashboard" asp-action="Index">
                     <span class="brand-badge"><i class="bi bi-activity"></i></span>
@@ -30,18 +36,23 @@
                 <div class="navbar-collapse collapse d-md-inline-flex justify-content-end">
                     <ul class="navbar-nav">
                         <li class="nav-item">
-                            <a class="nav-link @(currentController == "Dashboard" ? "active" : "")" asp-area="" asp-controller="Dashboard" asp-action="Index">
+                            <a class="@navClass("Dashboard")" aria-current="@navCurrent("Dashboard")" asp-area="" asp-controller="Dashboard" asp-action="Index">
                                 <i class="bi bi-speedometer2"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @(currentController == "Trends" ? "active" : "")" asp-area="" asp-controller="Trends" asp-action="Index">
+                            <a class="@navClass("Trends")" aria-current="@navCurrent("Trends")" asp-area="" asp-controller="Trends" asp-action="Index">
                                 <i class="bi bi-graph-up-arrow"></i> Trend Analysis
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link @(currentController == "Statistics" ? "active" : "")" asp-area="" asp-controller="Statistics" asp-action="Index">
+                            <a class="@navClass("Statistics")" aria-current="@navCurrent("Statistics")" asp-area="" asp-controller="Statistics" asp-action="Index">
                                 <i class="bi bi-table"></i> State Statistics
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="@navClass("Audit")" aria-current="@navCurrent("Audit")" asp-area="" asp-controller="Audit" asp-action="Index">
+                                <i class="bi bi-shield-check"></i> Audit Trail
                             </a>
                         </li>
                     </ul>
@@ -62,6 +73,7 @@
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

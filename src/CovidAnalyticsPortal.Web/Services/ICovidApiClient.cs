@@ -59,4 +59,21 @@ public interface ICovidApiClient
         DateOnly to,
         string? state,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Retrieves audit trail entries for the supplied optional filters, ordered
+    /// most-recent first.
+    /// </summary>
+    /// <param name="from">Optional inclusive start date.</param>
+    /// <param name="to">Optional inclusive end date.</param>
+    /// <param name="action">Optional action name to filter by.</param>
+    /// <param name="maxResults">The maximum number of entries to return.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
+    /// <returns>The matching audit entries, never <c>null</c>.</returns>
+    Task<IReadOnlyList<AuditTrailResponse>> GetAuditTrailAsync(
+        DateOnly? from,
+        DateOnly? to,
+        string? action,
+        int maxResults,
+        CancellationToken cancellationToken = default);
 }

@@ -101,6 +101,25 @@ public sealed class CovidApiClient : ICovidApiClient
         return await GetJsonAsync<TrendResponse>(uri, cancellationToken).ConfigureAwait(false);
     }
 
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<AuditTrailResponse>> GetAuditTrailAsync(
+        DateOnly? from,
+        DateOnly? to,
+        string? action,
+        int maxResults,
+        CancellationToken cancellationToken = default)
+    {
+        var query = BuildQuery(
+            ("from", from?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+            ("to", to?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)),
+            ("action", action),
+            ("maxResults", maxResults.ToString(CultureInfo.InvariantCulture)));
+
+        var uri = $"api/v{_apiVersion}/audit{query}";
+        var result = await GetJsonAsync<List<AuditTrailResponse>>(uri, cancellationToken).ConfigureAwait(false);
+        return result ?? [];
+    }
+
     private async Task<T?> GetJsonAsync<T>(string uri, CancellationToken cancellationToken)
     {
         using var response = await _httpClient

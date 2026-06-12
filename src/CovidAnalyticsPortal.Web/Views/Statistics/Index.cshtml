@@ -12,19 +12,21 @@
 <form asp-controller="Statistics" asp-action="Index" method="get" class="card filter-card mb-4 rise rise-2">
     <div class="card-body">
         <div class="row g-3 align-items-end">
-            <div class="col-12 col-md-3">
-                <label asp-for="From" class="form-label"></label>
-                <input asp-for="From" type="date" class="form-control" max="@maxDate" />
-            </div>
-            <div class="col-12 col-md-3">
-                <label asp-for="To" class="form-label"></label>
-                <input asp-for="To" type="date" class="form-control" max="@maxDate" />
+            <div class="col-12 col-md-5">
+                <label for="dateRange" class="form-label">Date range</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar-range"></i></span>
+                    <input type="text" id="dateRange" class="form-control" placeholder="Select a date range"
+                           autocomplete="off" aria-label="Date range" data-date-range data-max="@maxDate" />
+                </div>
+                <input asp-for="From" type="hidden" value="@Model.From.ToString("yyyy-MM-dd")" />
+                <input asp-for="To" type="hidden" value="@Model.To.ToString("yyyy-MM-dd")" />
             </div>
             <div class="col-12 col-md-3">
                 <label asp-for="State" class="form-label"></label>
                 <select asp-for="State" asp-items="@Model.States" class="form-select"></select>
             </div>
-            <div class="col-12 col-md-3 d-grid d-md-flex gap-2">
+            <div class="col-12 col-md-4 d-grid d-md-flex gap-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-search"></i> Search
                 </button>
@@ -42,36 +44,37 @@
 @if (Model.Searched && Model.Results.Count > 0)
 {
     <div class="card rise rise-3">
-        <div class="card-header d-flex justify-content-between align-items-center">
+        <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
             <span><i class="bi bi-table me-2 text-primary"></i>Results</span>
             <span class="badge soft">@Model.Results.Count rows</span>
         </div>
-        <div class="table-responsive">
-            <table id="statsTable" class="table table-striped table-hover align-middle mb-0">
+        <div class="table-responsive table-scroll">
+            <table id="statsTable" class="table table-striped table-hover align-middle mb-0"
+                   data-enhance data-page-size="#pageSize" data-pager="#pager" data-page-info="#pageInfo">
                 <thead class="table-light">
                     <tr>
-                        <th scope="col">Date</th>
-                        <th scope="col">State</th>
-                        <th scope="col" class="text-end">New Cases</th>
-                        <th scope="col" class="text-end">Cumulative</th>
-                        <th scope="col" class="text-end">Active</th>
-                        <th scope="col" class="text-end">Recovered</th>
-                        <th scope="col" class="text-end">New Deaths</th>
-                        <th scope="col" class="text-end">Total Deaths</th>
+                        <th scope="col" data-sort-type="date">Date</th>
+                        <th scope="col" data-sort-type="text">State</th>
+                        <th scope="col" class="text-end" data-sort-type="number">New Cases</th>
+                        <th scope="col" class="text-end" data-sort-type="number">Cumulative</th>
+                        <th scope="col" class="text-end" data-sort-type="number">Active</th>
+                        <th scope="col" class="text-end" data-sort-type="number">Recovered</th>
+                        <th scope="col" class="text-end" data-sort-type="number">New Deaths</th>
+                        <th scope="col" class="text-end" data-sort-type="number">Total Deaths</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var row in Model.Results.OrderBy(r => r.Date).ThenBy(r => r.StateName))
                     {
                         <tr>
-                            <td>@row.Date.ToString("dd MMM yyyy")</td>
+                            <td data-sort-value="@row.Date.ToString("yyyy-MM-dd")">@row.Date.ToString("dd MMM yyyy")</td>
                             <td>@row.StateName</td>
-                            <td class="text-end">@row.NewCases.ToString("N0")</td>
-                            <td class="text-end">@row.CumulativeCases.ToString("N0")</td>
-                            <td class="text-end">@row.ActiveCases.ToString("N0")</td>
-                            <td class="text-end">@row.Recovered.ToString("N0")</td>
-                            <td class="text-end">@row.NewDeaths.ToString("N0")</td>
-                            <td class="text-end">@row.CumulativeDeaths.ToString("N0")</td>
+                            <td class="text-end" data-sort-value="@row.NewCases">@row.NewCases.ToString("N0")</td>
+                            <td class="text-end" data-sort-value="@row.CumulativeCases">@row.CumulativeCases.ToString("N0")</td>
+                            <td class="text-end" data-sort-value="@row.ActiveCases">@row.ActiveCases.ToString("N0")</td>
+                            <td class="text-end" data-sort-value="@row.Recovered">@row.Recovered.ToString("N0")</td>
+                            <td class="text-end" data-sort-value="@row.NewDeaths">@row.NewDeaths.ToString("N0")</td>
+                            <td class="text-end" data-sort-value="@row.CumulativeDeaths">@row.CumulativeDeaths.ToString("N0")</td>
                         </tr>
                     }
                 </tbody>
@@ -95,83 +98,4 @@
     </div>
 }
 
-@section Scripts {
-    @if (Model.Searched && Model.Results.Count > 0)
-    {
-        <script>
-            (function () {
-                const table = document.getElementById('statsTable');
-                if (!table) return;
-                const rows = Array.from(table.tBodies[0].rows);
-                const pageSizeSel = document.getElementById('pageSize');
-                const pager = document.getElementById('pager');
-                const info = document.getElementById('pageInfo');
-                let pageSize = parseInt(pageSizeSel.value, 10);
-                let current = 1;
 
-                function totalPages() { return Math.max(1, Math.ceil(rows.length / pageSize)); }
-
-                function render() {
-                    const pages = totalPages();
-                    current = Math.min(current, pages);
-                    const start = (current - 1) * pageSize;
-                    const end = start + pageSize;
-                    rows.forEach((r, i) => { r.style.display = (i >= start && i < end) ? '' : 'none'; });
-
-                    const shown = Math.min(end, rows.length);
-                    info.textContent = `Showing ${rows.length ? start + 1 : 0}–${shown} of ${rows.length}`;
-                    buildPager(pages);
-                }
-
-                function pageItem(label, page, opts = {}) {
-                    const li = document.createElement('li');
-                    li.className = 'page-item' + (opts.active ? ' active' : '') + (opts.disabled ? ' disabled' : '');
-                    const a = document.createElement('a');
-                    a.className = 'page-link';
-                    a.href = '#';
-                    a.innerHTML = label;
-                    if (!opts.disabled && !opts.active && page) {
-                        a.addEventListener('click', e => { e.preventDefault(); current = page; render(); });
-                    } else {
-                        a.addEventListener('click', e => e.preventDefault());
-                    }
-                    li.appendChild(a);
-                    return li;
-                }
-
-                function buildPager(pages) {
-                    pager.innerHTML = '';
-                    pager.appendChild(pageItem('&laquo;', current - 1, { disabled: current === 1 }));
-
-                    const win = 2;
-                    const nums = new Set([1, pages]);
-                    for (let p = current - win; p <= current + win; p++) {
-                        if (p >= 1 && p <= pages) nums.add(p);
-                    }
-                    const sorted = Array.from(nums).sort((a, b) => a - b);
-                    let prev = 0;
-                    for (const p of sorted) {
-                        if (p - prev > 1) {
-                            const li = document.createElement('li');
-                            li.className = 'page-item disabled';
-                            li.innerHTML = '<span class="page-link">…</span>';
-                            pager.appendChild(li);
-                        }
-                        pager.appendChild(pageItem(p, p, { active: p === current }));
-                        prev = p;
-                    }
-
-                    pager.appendChild(pageItem('&raquo;', current + 1, { disabled: current === pages }));
-                }
-
-                pageSizeSel.addEventListener('change', () => {
-                    pageSize = parseInt(pageSizeSel.value, 10);
-                    current = 1;
-                    render();
-                });
-
-                render();
-            })();
-        </script>
-    }
-}

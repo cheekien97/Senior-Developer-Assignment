@@ -18,15 +18,17 @@
 <form asp-controller="Dashboard" asp-action="Index" method="get" class="card filter-card mb-4 rise rise-2">
     <div class="card-body">
         <div class="row g-3 align-items-end">
-            <div class="col-12 col-md-4">
-                <label asp-for="From" class="form-label"></label>
-                <input asp-for="From" type="date" class="form-control" max="@maxDate" />
+            <div class="col-12 col-md-6">
+                <label for="dateRange" class="form-label">Date range</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-calendar-range"></i></span>
+                    <input type="text" id="dateRange" class="form-control" placeholder="Select a date range"
+                           autocomplete="off" aria-label="Date range" data-date-range data-max="@maxDate" />
+                </div>
+                <input asp-for="From" type="hidden" value="@(Model.From?.ToString("yyyy-MM-dd"))" />
+                <input asp-for="To" type="hidden" value="@(Model.To?.ToString("yyyy-MM-dd"))" />
             </div>
-            <div class="col-12 col-md-4">
-                <label asp-for="To" class="form-label"></label>
-                <input asp-for="To" type="date" class="form-control" max="@maxDate" />
-            </div>
-            <div class="col-12 col-md-4 d-grid d-md-flex gap-2">
+            <div class="col-12 col-md-6 d-grid d-md-flex gap-2">
                 <button type="submit" class="btn btn-primary">
                     <i class="bi bi-funnel"></i> Apply Filter
                 </button>
@@ -49,7 +51,10 @@
             <div class="stat-card stat-card--cases h-100 rise rise-1">
                 <span class="stat-card__glow"></span>
                 <div class="stat-card__icon"><i class="bi bi-virus2"></i></div>
-                <div class="stat-card__label">Total Cases</div>
+                <div class="stat-card__label">Total Cases
+                    <i class="bi bi-info-circle stat-card__info" data-bs-toggle="tooltip"
+                       title="Cumulative confirmed COVID-19 cases up to the end of the selected period."></i>
+                </div>
                 <div class="stat-card__value">@s.TotalCases.ToString("N0")</div>
                 <div class="stat-card__meta"><i class="bi bi-arrow-up-short"></i> +@s.NewCasesToday.ToString("N0") new today</div>
             </div>
@@ -58,7 +63,10 @@
             <div class="stat-card stat-card--deaths h-100 rise rise-2">
                 <span class="stat-card__glow"></span>
                 <div class="stat-card__icon"><i class="bi bi-heartbreak"></i></div>
-                <div class="stat-card__label">Total Deaths</div>
+                <div class="stat-card__label">Total Deaths
+                    <i class="bi bi-info-circle stat-card__info" data-bs-toggle="tooltip"
+                       title="Cumulative COVID-19 deaths up to the end of the selected period."></i>
+                </div>
                 <div class="stat-card__value">@s.TotalDeaths.ToString("N0")</div>
                 <div class="stat-card__meta"><i class="bi bi-arrow-up-short"></i> +@s.NewDeathsToday.ToString("N0") new today</div>
             </div>
@@ -67,7 +75,10 @@
             <div class="stat-card stat-card--active h-100 rise rise-3">
                 <span class="stat-card__glow"></span>
                 <div class="stat-card__icon"><i class="bi bi-activity"></i></div>
-                <div class="stat-card__label">Active Cases</div>
+                <div class="stat-card__label">Active Cases
+                    <i class="bi bi-info-circle stat-card__info" data-bs-toggle="tooltip"
+                       title="People still infectious (cumulative cases minus recovered and deaths). Shows 0 when the data source no longer reports this field."></i>
+                </div>
                 <div class="stat-card__value">@s.ActiveCases.ToString("N0")</div>
                 <div class="stat-card__meta"><i class="bi bi-dot"></i> Currently infectious</div>
             </div>
@@ -76,7 +87,10 @@
             <div class="stat-card stat-card--recovered h-100 rise rise-4">
                 <span class="stat-card__glow"></span>
                 <div class="stat-card__icon"><i class="bi bi-heart-pulse"></i></div>
-                <div class="stat-card__label">Recovered</div>
+                <div class="stat-card__label">Recovered
+                    <i class="bi bi-info-circle stat-card__info" data-bs-toggle="tooltip"
+                       title="People who recovered during the selected period. Shows 0 when the data source no longer reports this field."></i>
+                </div>
                 <div class="stat-card__value">@s.TotalRecovered.ToString("N0")</div>
                 <div class="stat-card__meta"><i class="bi bi-check2"></i> Over the period</div>
             </div>
@@ -86,7 +100,10 @@
     <div class="row g-3">
         <div class="col-12 col-xl-7">
             <div class="card h-100 rise rise-3">
-                <div class="card-header"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Cases by State</div>
+                <div class="card-header"><i class="bi bi-bar-chart-line me-2 text-primary"></i>Cases by State
+                    <i class="bi bi-info-circle ms-1 text-muted small" data-bs-toggle="tooltip"
+                       title="New cases per state for the selected period, sorted highest first. Hover a bar for the exact count."></i>
+                </div>
                 <div class="card-body">
                     <canvas id="stateCasesChart" height="140"></canvas>
                 </div>
@@ -94,7 +111,10 @@
         </div>
         <div class="col-12 col-xl-5">
             <div class="card h-100 rise rise-4">
-                <div class="card-header"><i class="bi bi-list-columns-reverse me-2 text-primary"></i>State Breakdown</div>
+                <div class="card-header"><i class="bi bi-list-columns-reverse me-2 text-primary"></i>State Breakdown
+                    <i class="bi bi-info-circle ms-1 text-muted small" data-bs-toggle="tooltip"
+                       title="Per-state detail: new cases, active cases and deaths for the selected period, sorted by new cases."></i>
+                </div>
                 <div class="table-responsive" style="max-height: 420px;">
                     <table class="table table-striped table-hover mb-0">
                         <thead class="table-light sticky-top">

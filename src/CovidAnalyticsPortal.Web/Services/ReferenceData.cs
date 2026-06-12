@@ -45,6 +45,21 @@ public static class ReferenceData
     ];
 
     /// <summary>
+    /// The auditable actions, matching the API's AuditAction enum names.
+    /// </summary>
+    public static readonly IReadOnlyList<(string Value, string Label)> AuditActions =
+    [
+        ("ViewDashboard", "View Dashboard"),
+        ("ViewStatistics", "View Statistics"),
+        ("ViewTrends", "View Trends"),
+        ("ViewHistory", "View History"),
+        ("ApplyFilter", "Apply Filter"),
+        ("ExportData", "Export Data"),
+        ("IngestData", "Ingest Data"),
+        ("SystemError", "System Error"),
+    ];
+
+    /// <summary>
     /// Builds the state dropdown items, with a leading "All states" option.
     /// </summary>
     /// <param name="selected">The currently selected state code, if any.</param>
@@ -78,4 +93,26 @@ public static class ReferenceData
             Text = m.Label,
             Selected = string.Equals(m.Value, selected, StringComparison.OrdinalIgnoreCase),
         }).ToList();
+
+    /// <summary>
+    /// Builds the audit-action dropdown items, with a leading "All actions" option.
+    /// </summary>
+    /// <param name="selected">The currently selected action value, if any.</param>
+    /// <returns>The select-list items.</returns>
+    public static IReadOnlyList<SelectListItem> BuildAuditActionItems(string? selected)
+    {
+        var items = new List<SelectListItem>
+        {
+            new() { Value = string.Empty, Text = "All actions", Selected = string.IsNullOrEmpty(selected) },
+        };
+
+        items.AddRange(AuditActions.Select(a => new SelectListItem
+        {
+            Value = a.Value,
+            Text = a.Label,
+            Selected = string.Equals(a.Value, selected, StringComparison.OrdinalIgnoreCase),
+        }));
+
+        return items;
+    }
 }

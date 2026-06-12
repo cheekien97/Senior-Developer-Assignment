@@ -39,6 +39,7 @@ html { position: relative; min-height: 100%; font-size: 15px; }
 
 body {
   margin-bottom: 72px;
+  padding-top: 92px;
   font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   color: var(--ink);
   background-color: var(--bg);
@@ -55,6 +56,7 @@ a { text-decoration: none; }
 
 /* ----------------------------- Navbar ---------------------------------- */
 .navbar.app-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 1030;
   background: rgba(255, 255, 255, .72) !important;
   backdrop-filter: saturate(180%) blur(14px);
   -webkit-backdrop-filter: saturate(180%) blur(14px);
@@ -79,10 +81,25 @@ a { text-decoration: none; }
   display: inline-flex; align-items: center; gap: .4rem;
   transition: background-color .18s ease, color .18s ease;
 }
+.navbar.app-nav .nav-link i { font-size: 1.05rem; line-height: 1; }
 .navbar.app-nav .nav-link:hover { color: var(--brand-600); background: rgba(79, 70, 229, .08); }
+.navbar.app-nav .nav-link:focus-visible {
+  outline: none; color: var(--brand-600);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, .35);
+}
 .navbar.app-nav .nav-link.active {
   color: #fff; background: var(--brand-grad);
   box-shadow: 0 6px 16px -6px rgba(79, 70, 229, .6);
+}
+.navbar.app-nav .nav-link.active:hover { color: #fff; }
+.navbar.app-nav .navbar-toggler:focus-visible {
+  outline: none; box-shadow: 0 0 0 3px rgba(79, 70, 229, .35);
+}
+
+/* Mobile: give the collapsed menu items room to breathe. */
+@media (max-width: 767.98px) {
+  .navbar.app-nav .navbar-nav { gap: .25rem; padding-top: .5rem; }
+  .navbar.app-nav .nav-link { padding: .6rem .9rem !important; }
 }
 
 /* ----------------------------- Page header ----------------------------- */
@@ -136,32 +153,42 @@ a { text-decoration: none; }
 .filter-card .form-label { font-weight: 600; color: var(--ink-soft); font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; }
 
 /* ----------------------------- Stat cards ------------------------------ */
+/* Soft, tinted cards that sit harmoniously alongside the white content
+   cards: a neutral surface with a coloured accent (top bar + icon chip),
+   rather than heavy fully-saturated colour blocks. */
 .stat-card {
   position: relative; overflow: hidden;
-  border-radius: var(--radius); color: #fff; padding: 1.35rem 1.4rem;
-  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+  color: var(--ink);
+  padding: 1.3rem 1.4rem;
   min-height: 138px;
   transition: transform .22s ease, box-shadow .22s ease;
 }
-.stat-card:hover { transform: translateY(-4px); }
-.stat-card--cases { background: var(--grad-cases); }
-.stat-card--deaths { background: var(--grad-deaths); }
-.stat-card--active { background: var(--grad-active); }
-.stat-card--recovered { background: var(--grad-recovered); }
+.stat-card::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 4px;
+  background: var(--accent-grad, var(--brand-grad));
+}
+.stat-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.stat-card--cases     { --accent: #4f46e5; --accent-soft: rgba(79, 70, 229, .10); --accent-grad: linear-gradient(135deg, #4f46e5, #6366f1); }
+.stat-card--deaths    { --accent: #e11d48; --accent-soft: rgba(225, 29, 72, .10); --accent-grad: linear-gradient(135deg, #e11d48, #f43f5e); }
+.stat-card--active    { --accent: #d97706; --accent-soft: rgba(217, 119, 6, .12); --accent-grad: linear-gradient(135deg, #ea580c, #f59e0b); }
+.stat-card--recovered { --accent: #059669; --accent-soft: rgba(5, 150, 105, .12); --accent-grad: linear-gradient(135deg, #059669, #10b981); }
 .stat-card__icon {
-  position: absolute; top: 1.1rem; right: 1.1rem;
+  position: absolute; top: 1.25rem; right: 1.25rem;
   width: 42px; height: 42px; border-radius: 12px;
   display: grid; place-items: center; font-size: 1.25rem;
-  background: rgba(255, 255, 255, .2); backdrop-filter: blur(4px);
+  background: var(--accent-soft); color: var(--accent);
 }
-.stat-card__glow {
-  position: absolute; right: -40px; bottom: -55px;
-  width: 160px; height: 160px; border-radius: 50%;
-  background: rgba(255, 255, 255, .14);
-}
-.stat-card__label { font-size: .8rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; opacity: .9; }
-.stat-card__value { font-size: 2.1rem; font-weight: 800; line-height: 1.1; margin: .35rem 0 .25rem; letter-spacing: -.02em; }
-.stat-card__meta { font-size: .82rem; opacity: .92; display: inline-flex; align-items: center; gap: .25rem; }
+.stat-card__glow { display: none; }
+.stat-card__label { font-size: .78rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.stat-card__info { margin-left: .25rem; font-size: .8rem; opacity: .55; cursor: help; text-transform: none; }
+.stat-card__info:hover { opacity: 1; color: var(--brand-600); }
+.stat-card__value { font-size: 2.05rem; font-weight: 800; line-height: 1.1; margin: .4rem 0 .3rem; letter-spacing: -.02em; color: var(--ink); }
+.stat-card__meta { font-size: .82rem; font-weight: 600; color: var(--accent); display: inline-flex; align-items: center; gap: .25rem; }
+
 
 /* ----------------------------- KPI cards ------------------------------- */
 .kpi-card { border-radius: var(--radius); height: 100%; }
@@ -204,6 +231,75 @@ a { text-decoration: none; }
 .table-hover > tbody > tr:hover > * { background: rgba(79, 70, 229, .05); }
 .table-striped > tbody > tr:nth-of-type(odd) > * { background: #fafbfe; }
 
+/* Scrollable table body with a sticky header (keeps the page from growing). */
+.table-scroll { max-height: 60vh; overflow-y: auto; overflow-x: auto; }
+.table-scroll > .table > thead > tr > th {
+  position: sticky; top: 0; z-index: 3;
+}
+
+/* Soft, neutral scrollbar so it blends with the design system. */
+.table-scroll { scrollbar-width: thin; scrollbar-color: rgba(100, 116, 139, .35) transparent; }
+.table-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+.table-scroll::-webkit-scrollbar-track { background: transparent; }
+.table-scroll::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, .3);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+.table-scroll::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, .5); background-clip: content-box; }
+.table-scroll::-webkit-scrollbar-corner { background: transparent; }
+
+/* Date-range picker: flatpickr makes the visible input readonly, which the
+   browser renders with a greyed-out "disabled" look. Force it to read as a
+   normal, clickable field. */
+.flatpickr-input[readonly].form-control,
+input.form-control.input[readonly] {
+  background-color: #fff;
+  opacity: 1;
+  cursor: pointer;
+}
+.flatpickr-input[readonly].form-control:focus,
+input.form-control.input[readonly]:focus {
+  background-color: #fff;
+}
+
+/* Sortable headers + per-table search box. */
+.table > thead th.th-sortable { cursor: pointer; user-select: none; padding-right: 1.6rem; position: relative; }
+.table > thead th.th-sortable:hover { color: var(--brand-600); background: #f1f1fb; }
+.table > thead th.th-sortable .sort-indicator {
+  position: absolute; right: .7rem; top: 50%; transform: translateY(-50%);
+  font-size: .7rem; opacity: .35; transition: opacity .15s ease;
+}
+.table > thead th.th-sortable .sort-indicator::before { content: "\2195"; }
+.table > thead th.sorted-asc .sort-indicator { opacity: 1; color: var(--brand-600); }
+.table > thead th.sorted-asc .sort-indicator::before { content: "\2191"; }
+.table > thead th.sorted-desc .sort-indicator { opacity: 1; color: var(--brand-600); }
+.table > thead th.sorted-desc .sort-indicator::before { content: "\2193"; }
+
+/* Per-column search: a magnifier button that pops out a filter input. */
+.table > thead th.th-has-search { position: relative; padding-right: 2.1rem; }
+.table > thead th.th-sortable.th-has-search { padding-right: 3.2rem; }
+.table > thead th.th-sortable.th-has-search .sort-indicator { right: 1.9rem; }
+.th-search-btn {
+  position: absolute; right: .45rem; top: 50%; transform: translateY(-50%);
+  width: 1.5rem; height: 1.5rem; padding: 0; border: 0; border-radius: 7px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; color: var(--ink-soft); cursor: pointer;
+  font-size: .8rem; transition: background-color .15s ease, color .15s ease;
+}
+.th-search-btn:hover { background: rgba(79, 70, 229, .1); color: var(--brand-600); }
+.th-search-btn.filtered { background: var(--brand-grad); color: #fff; }
+.th-search-pop {
+  position: fixed; top: 0; left: 0; z-index: 1080;
+  display: none; min-width: 12rem; padding: .5rem;
+  background: #fff; border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: var(--shadow-md, 0 10px 30px -8px rgba(15, 23, 42, .25));
+  text-transform: none; font-weight: 400; letter-spacing: normal;
+}
+.th-search-pop.open { display: block; }
+.th-search-pop .form-control { font-size: .85rem; }
+
 /* ----------------------------- Badges ---------------------------------- */
 .badge { font-weight: 600; border-radius: 999px; padding: .4em .75em; }
 .badge.soft { background: rgba(79, 70, 229, .1); color: var(--brand-600); }
@@ -215,8 +311,10 @@ a { text-decoration: none; }
 
 /* ----------------------------- Footer ---------------------------------- */
 .footer {
-  position: absolute; bottom: 0; width: 100%; height: 56px; line-height: 56px;
+  position: fixed; left: 0; bottom: 0; width: 100%; height: 56px; line-height: 56px;
+  z-index: 1020;
   background: rgba(255, 255, 255, .72); backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border-top: 1px solid var(--line); color: var(--ink-soft); font-size: .88rem;
 }
 .footer a { color: var(--brand-600); font-weight: 600; }
